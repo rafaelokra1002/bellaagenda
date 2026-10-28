@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-blush: #f8e8ec;
+  --color-blush-deep: #f1d5dc;
+  --color-nude: #e8d2c4;
+  --color-nude-soft: #f4e9e2;
+  --color-cream: #fdf9f7;
+  --color-cocoa: #493832;
+  --color-cocoa-soft: #6b5850;
+  --color-cocoa-muted: #8a7870;
+  --color-gold: #c5a46d;
+  --color-gold-deep: #8a6a35;
+  --color-line: #eadcd5;
+
+  --font-display: var(--font-cormorant), "Georgia", serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-soft: 0 1px 2px rgb(73 56 50 / 0.04), 0 8px 24px -12px rgb(73 56 50 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(73 56 50 / 0.05), 0 16px 40px -16px rgb(73 56 50 / 0.28);
+
+  --animate-fade-up: fade-up 0.35s ease-out both;
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+:root {
+  --accent: var(--color-cocoa);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-cocoa);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-deep);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mantém o conteúdo acima da navegação inferior no celular, inclusive no iPhone. */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
+}
+.bottom-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}

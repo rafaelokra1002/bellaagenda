@@ -1,0 +1,198 @@
+// BellaAgenda — modelo de dados multi-profissional.
+// Todas as datas/horas absolutas são gravadas como timestamptz (UTC); o fuso de
+// exibição vem de Professional.timezone.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppointmentStatus {
+  PENDENTE
+  CONFIRMADO
+  CONCLUIDO
+  CANCELADO
+  NAO_COMPARECEU
+}
+
+enum AuditAction {
+  CRIADO
+  STATUS_ALTERADO
+  REMARCADO
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+  professional Professional?
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  // Guardamos apenas o hash SHA-256 do token; o token em si vive só no cookie.
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Professional {
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  name                 String
+  slug                 String              @unique
+  headline             String?
+  description          String?
+  photoUrl             String?
+  coverUrl             String?
+  accentColor          String?
+  whatsapp             String
+  address              String?
+  instagram            String?
+  timezone             String              @default("America/Bahia")
+  isActive             Boolean             @default(true)
+  // Regras de agenda
+  slotStepMinutes      Int                 @default(30)
+  defaultBufferMinutes Int                 @default(0)
+  minNoticeMinutes     Int                 @default(120)
+  maxAdvanceDays       Int                 @default(60)
+  isDemo               Boolean             @default(false)
+  createdAt            DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime            @updatedAt @db.Timestamptz(3)
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services             Service[]
+  customers            Customer[]
+  appointments         Appointment[]
+  businessHours        BusinessHour[]
+  availabilityBlocks   AvailabilityBlock[]
+}
+
+model Service {
+  id              String        @id @default(cuid())
+  professionalId  String
+  name            String
+  description     String?
+  price           Decimal       @db.Decimal(10, 2)
+  durationMinutes Int
+  // null = usa Professional.defaultBufferMinutes
+  bufferMinutes   Int?
+  imageUrl        String?
+  isActive        Boolean       @default(true)
+  sortOrder       Int           @default(0)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+  professional    Professional  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  appointments    Appointment[]
+
+  @@index([professionalId, isActive])
+}
+
+model Customer {
+  id             String        @id @default(cuid())
+  professionalId String
+  name           String
+  // Somente dígitos, com DDI (ex.: 5571999998888) — evita duplicidade por formatação.
+  whatsapp       String
+  consentAt      DateTime?     @db.Timestamptz(3)
+  anonymizedAt   DateTime?     @db.Timestamptz(3)
+  isDemo         Boolean       @default(false)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  professional   Professional  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  appointments   Appointment[]
+
+  @@unique([professionalId, whatsapp])
+  @@index([professionalId, name])
+}
+
+model Appointment {
+  id                  String             @id @default(cuid())
+  professionalId      String
+  serviceId           String
+  customerId          String
+  startAt             DateTime           @db.Timestamptz(3)
+  endAt               DateTime           @db.Timestamptz(3)
+  // endAt + intervalo após o atendimento. É o intervalo que ocupa a agenda.
+  occupiedUntil       DateTime           @db.Timestamptz(3)
+  serviceNameSnapshot String
+  priceSnapshot       Decimal            @db.Decimal(10, 2)
+  status              AppointmentStatus  @default(PENDENTE)
+  customerNotes       String?
+  // Token aleatório para a página de confirmação pública (não expõe o id).
+  publicToken         String             @unique
+  isDemo              Boolean            @default(false)
+  cancelledAt         DateTime?          @db.Timestamptz(3)
+  createdAt           DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime           @updatedAt @db.Timestamptz(3)
+  professional        Professional       @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service             Service            @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  customer            Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  audits              AppointmentAudit[]
+
+  @@index([professionalId, startAt])
+  @@index([professionalId, status])
+  @@index([customerId])
+  @@index([serviceId])
+}
+
+model BusinessHour {
+  id             String       @id @default(cuid())
+  professionalId String
+  // 0 = domingo ... 6 = sábado
+  dayOfWeek      Int
+  // "HH:MM" no fuso da profissional
+  startTime      String
+  endTime        String
+  isActive       Boolean      @default(true)
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId, dayOfWeek])
+}
+
+model AvailabilityBlock {
+  id             String       @id @default(cuid())
+  professionalId String
+  startAt        DateTime     @db.Timestamptz(3)
+  endAt          DateTime     @db.Timestamptz(3)
+  reason         String?
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId, startAt])
+}
+
+model AppointmentAudit {
+  id              String             @id @default(cuid())
+  appointmentId   String
+  action          AuditAction
+  previousStatus  AppointmentStatus?
+  newStatus       AppointmentStatus?
+  previousStartAt DateTime?          @db.Timestamptz(3)
+  newStartAt      DateTime?          @db.Timestamptz(3)
+  // null quando a ação veio da página pública (a própria cliente)
+  changedByUserId String?
+  createdAt       DateTime           @default(now()) @db.Timestamptz(3)
+  appointment     Appointment        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId, createdAt])
+}
+
+// Limite de requisições compartilhado entre instâncias (janela fixa).
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime @db.Timestamptz(3)
+}
