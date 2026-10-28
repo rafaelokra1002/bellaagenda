@@ -9,7 +9,6 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  output: "standalone",
   images: {
     // Fotos e imagens de serviço são URLs configuráveis pela profissional.
     remotePatterns: [{ protocol: "https", hostname: "**" }],

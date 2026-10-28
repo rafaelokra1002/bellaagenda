@@ -101,8 +101,13 @@ export function parseQuery<T>(req: Request, schema: ZodType<T, ZodTypeDef, unkno
   return schema.parse(obj);
 }
 
+/**
+ * IP da cliente para limite de requisições. Usa o ÚLTIMO valor de
+ * X-Forwarded-For: é o que o proxy reverso (Traefik/Coolify) acrescenta.
+ * Os valores anteriores vêm do próprio cliente e podem ser forjados.
+ */
 export function clientIp(req: Request): string {
   const fwd = req.headers.get("x-forwarded-for");
-  const ip = fwd?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+  const ip = fwd?.split(",").at(-1)?.trim() || req.headers.get("x-real-ip") || "unknown";
   return ip.slice(0, 64);
 }

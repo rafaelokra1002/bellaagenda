@@ -115,14 +115,23 @@ Abrir o link **não** envia a mensagem: a pessoa ainda precisa tocar em enviar. 
 
 ## Deploy
 
-Qualquer hospedagem Node.js serve (Vercel, Railway, Render, Coolify/Docker, VPS). O `next.config.ts` gera um build `standalone`.
+Qualquer hospedagem Node.js serve (Coolify, Railway, Render, VPS). `npm start` aplica as migrations pendentes (`prisma migrate deploy`, que não apaga dados) e depois inicia o Next.js. Assim, uma mudança de schema nunca sobe sem a migration correspondente.
 
-1. Crie um PostgreSQL gerenciado e configure `DATABASE_URL`, `APP_URL` e `NODE_ENV=production`.
-2. Build: `npm ci && npm run build` (o script já roda `prisma generate`).
-3. Antes de iniciar cada versão: `npm run db:deploy`.
-4. Inicie com `npm start` (ou `node .next/standalone/server.js`, copiando `.next/static` e `public` se existirem).
-5. Crie as contas com `npm run admin:create` (**não** rode o seed em produção).
-6. Se houver proxy reverso, ele deve repassar `X-Forwarded-For` e `X-Forwarded-Host`: o limite por IP e a checagem de origem dependem deles.
+### Coolify
+
+1. **Banco:** *New Resource → Database → PostgreSQL 16*. Copie a **Postgres URL (internal)**.
+2. **App:** *New Resource → Public/Private Repository* apontando para este repositório, branch `main`, build pack **Nixpacks/Railpack**, porta **3000**.
+3. **Variáveis de ambiente do app:**
+   - `DATABASE_URL` = URL interna do passo 1
+   - `APP_URL` = `https://seu-dominio`
+   - `NODE_ENV` = `production`
+4. **Domínio:** em *Domains*, informe `https://seu-dominio`. O Coolify emite o certificado HTTPS.
+5. **Deploy.** A primeira inicialização cria as tabelas.
+6. **Conta da profissional:** no *Terminal* do container do app, rode `npm run admin:create -- --email ... --name "..." --slug ... --whatsapp "..."`.
+
+**Não** rode `db:seed` em produção.
+
+O limite por IP usa o **último** valor de `X-Forwarded-For`, que é o valor acrescentado pelo proxy do Coolify (Traefik). Se houver outro proxy na frente, como o Cloudflare em modo proxy, ajuste `clientIp` em `src/server/http.ts`.
 
 ### Domínio
 
