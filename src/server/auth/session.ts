@@ -78,10 +78,17 @@ export async function authenticateRequest(req: Request): Promise<AuthContext> {
   return ctx;
 }
 
+/** Cookie `Secure` sempre que o site é servido por HTTPS (navegadores descartam cookies Secure em HTTP). */
+function useSecureCookie(): boolean {
+  const appUrl = process.env.APP_URL;
+  if (appUrl) return appUrl.startsWith("https://");
+  return process.env.NODE_ENV === "production";
+}
+
 export function sessionCookieOptions(expiresAt: Date) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookie(),
     sameSite: "lax" as const,
     path: "/",
     expires: expiresAt,
