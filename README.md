@@ -123,8 +123,8 @@ Qualquer hospedagem Node.js serve (Coolify, Railway, Render, VPS). `npm start` a
 2. **App:** *New Resource → Public/Private Repository* apontando para este repositório, branch `main`, build pack **Nixpacks/Railpack**, porta **3000**.
 3. **Variáveis de ambiente do app:**
    - `DATABASE_URL` = URL interna do passo 1
-   - `APP_URL` = `https://seu-dominio`
-   - `NODE_ENV` = `production`
+   - `APP_URL` = `https://seu-dominio` (com `http://` o cookie de sessão não é marcado como Secure)
+   - **Não** defina `NODE_ENV`: o Coolify também usa as variáveis no build, e `NODE_ENV=production` faz o `npm` pular as devDependencies (Tailwind, TypeScript), quebrando o build. O `next start` já roda em modo produção.
 4. **Domínio:** em *Domains*, informe `https://seu-dominio`. O Coolify emite o certificado HTTPS.
 5. **Deploy.** A primeira inicialização cria as tabelas.
 6. **Conta da profissional:** no *Terminal* do container do app, rode `npm run admin:create -- --email ... --name "..." --slug ... --whatsapp "..."`.
