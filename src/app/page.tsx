@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { CalendarHeart, Clock3, MessageCircle, ShieldCheck } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 import { buttonClasses } from "@/components/ui/button";
+
+export const dynamic = "force-dynamic";
+
+const DEMO_SLUG = "studio-demo";
 
 const FEATURES = [
   { icon: CalendarHeart, title: "Página própria de agendamento", text: "Suas clientes escolhem serviço, data e horário pelo celular, sem criar conta." },
@@ -9,7 +14,9 @@ const FEATURES = [
   { icon: ShieldCheck, title: "Seguro e alinhado à LGPD", text: "Dados de cada profissional isolados e coleta mínima de informações." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  // Só oferece a demonstração se a página existir (não há seed em produção).
+  const hasDemo = !!(await prisma.professional.findFirst({ where: { slug: DEMO_SLUG, isActive: true }, select: { id: true } }).catch(() => null));
   return (
     <main className="min-h-dvh bg-[radial-gradient(90%_60%_at_50%_0%,#f8e8ec_0%,#fdf9f7_70%)]">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5 sm:px-6">
@@ -27,10 +34,12 @@ export default function Home() {
           Extensão de cílios, design de sobrancelhas e muito mais: publique seus serviços, defina seus horários e receba agendamentos sem conflitos.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/agendar/studio-demo" className={buttonClasses("primary", "lg")}>
-            Ver página de demonstração
-          </Link>
-          <Link href="/login" className={buttonClasses("outline", "lg")}>
+          {hasDemo && (
+            <Link href={`/agendar/${DEMO_SLUG}`} className={buttonClasses("primary", "lg")}>
+              Ver página de demonstração
+            </Link>
+          )}
+          <Link href="/login" className={buttonClasses(hasDemo ? "outline" : "primary", "lg")}>
             Acessar o painel
           </Link>
         </div>

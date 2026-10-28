@@ -12,31 +12,16 @@ import { randomBytes } from "node:crypto";
 import { PrismaClient, type AppointmentStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { assertNotProduction } from "../scripts/guard";
+import { DEMO_HOURS, DEMO_PROFILE, DEMO_SERVICES, DEMO_SLUG, DEMO_TZ } from "./demo-data";
 import { addDays, dayOfWeek, MINUTE_MS, toLocalDate, zonedToUtc } from "../src/lib/time";
 
 assertNotProduction("O seed de demonstração");
 
 const prisma = new PrismaClient();
-const TZ = "America/Bahia";
+const TZ = DEMO_TZ;
 const DEMO_EMAIL = "demo@bellaagenda.local";
-const DEMO_SLUG = "studio-demo";
-
-const SERVICES = [
-  { name: "Extensão de cílios", description: "Aplicação fio a fio para um olhar marcante e natural. (Valor de exemplo)", price: "120.00", durationMinutes: 120, bufferMinutes: 15 },
-  { name: "Manutenção de cílios", description: "Reposição dos fios para manter o volume da extensão. (Valor de exemplo)", price: "70.00", durationMinutes: 60, bufferMinutes: 15 },
-  { name: "Design de sobrancelhas", description: "Modelagem personalizada respeitando o formato do rosto. (Valor de exemplo)", price: "35.00", durationMinutes: 30, bufferMinutes: null },
-  { name: "Design com henna", description: "Design com aplicação de henna para preencher e definir. (Valor de exemplo)", price: "50.00", durationMinutes: 45, bufferMinutes: null },
-  { name: "Lash lifting", description: "Curvatura e nutrição dos cílios naturais. (Valor de exemplo)", price: "90.00", durationMinutes: 60, bufferMinutes: 15 },
-];
-
-// Seg–Sex: 08–12 e 14–18 · Sáb: 08–13
-const HOURS = [
-  ...[1, 2, 3, 4, 5].flatMap((d) => [
-    { dayOfWeek: d, startTime: "08:00", endTime: "12:00" },
-    { dayOfWeek: d, startTime: "14:00", endTime: "18:00" },
-  ]),
-  { dayOfWeek: 6, startTime: "08:00", endTime: "13:00" },
-];
+const SERVICES = DEMO_SERVICES;
+const HOURS = DEMO_HOURS;
 
 const CUSTOMERS = [
   { name: "Cliente Demonstração Ana", whatsapp: "5571900000001" },
@@ -69,23 +54,7 @@ async function main() {
       name: "Conta Demonstração",
       email: DEMO_EMAIL,
       passwordHash: await bcrypt.hash(password, 12),
-      professional: {
-        create: {
-          name: "Bella Studio (Demonstração)",
-          slug: DEMO_SLUG,
-          headline: "Extensão de cílios e design de sobrancelhas",
-          description:
-            "Página de demonstração do BellaAgenda. Serviços, valores e horários são exemplos fictícios e podem ser editados no painel.",
-          whatsapp: "5571900000000",
-          address: "Endereço de demonstração — Salvador, BA",
-          timezone: TZ,
-          slotStepMinutes: 30,
-          defaultBufferMinutes: 0,
-          minNoticeMinutes: 120,
-          maxAdvanceDays: 60,
-          isDemo: true,
-        },
-      },
+      professional: { create: DEMO_PROFILE },
     },
     include: { professional: true },
   });

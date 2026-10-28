@@ -129,6 +129,8 @@ Qualquer hospedagem Node.js serve (Coolify, Railway, Render, VPS). `npm start` a
 5. **Deploy.** A primeira inicialização cria as tabelas.
 6. **Conta da profissional:** no *Terminal* do container do app, rode `npm run admin:create -- --email ... --name "..." --slug ... --whatsapp "..."`.
 
+7. **Página de demonstração (opcional):** `npm run demo:page` cria `/agendar/studio-demo` só com serviços e horários de exemplo. Ela não tem clientes fictícias, e a conta recebe uma senha aleatória descartada, então não é possível entrar no painel por ela. Para tirar do ar, use `npm run demo:page -- --remove`. A página inicial só mostra o botão "Ver página de demonstração" quando ela existe.
+
 **Não** rode `db:seed` em produção.
 
 O limite por IP usa o **último** valor de `X-Forwarded-For`, que é o valor acrescentado pelo proxy do Coolify (Traefik). Se houver outro proxy na frente, como o Cloudflare em modo proxy, ajuste `clientIp` em `src/server/http.ts`.
