@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Clock, ExternalLink, LayoutDashboard, ListChecks, LogOut, Menu, Scissors, Settings, Users } from "lucide-react";
+import { CalendarDays, CircleHelp, Clock, ExternalLink, LayoutDashboard, ListChecks, LogOut, Menu, Scissors, Settings, Users } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-client";
@@ -16,6 +16,7 @@ const ITEMS = [
   { href: "/painel/clientes", label: "Clientes", icon: Users },
   { href: "/painel/horarios", label: "Horários", icon: Clock },
   { href: "/painel/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/painel/ajuda", label: "Ajuda", icon: CircleHelp },
 ];
 // No celular, as 4 principais ficam fixas; as demais vão para "Mais".
 const MOBILE_MAIN = ITEMS.slice(0, 4);

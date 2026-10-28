@@ -2,6 +2,8 @@ import Link from "next/link";
 import { CalendarCheck, CalendarDays, CheckCheck, CircleDollarSign, Users, XCircle } from "lucide-react";
 import { requireAuth } from "@/server/auth/guard";
 import { getDashboard } from "@/server/dashboard/service";
+import { getOnboarding } from "@/server/dashboard/onboarding";
+import { OnboardingChecklist } from "@/components/panel/onboarding-checklist";
 import { toAppointmentRow } from "@/server/appointments/dto";
 import { formatMoney } from "@/lib/money";
 import { formatDateLongBR } from "@/lib/time";
@@ -11,7 +13,8 @@ import { Card, EmptyState, PageHeader } from "@/components/ui/misc";
 
 export default async function DashboardPage() {
   const auth = await requireAuth();
-  const d = await getDashboard(auth.professionalId, auth.timezone);
+  const [d, onboarding] = await Promise.all([getDashboard(auth.professionalId, auth.timezone), getOnboarding(auth.professionalId)]);
+  const showOnboarding = onboarding.some((s) => !s.done);
   const firstName = auth.professionalName.split(" ")[0];
 
   const stats = [
@@ -34,6 +37,7 @@ export default async function DashboardPage() {
           </Link>
         }
       />
+      {showOnboarding && <OnboardingChecklist steps={onboarding} slug={auth.professionalSlug} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {stats.map((s) => (
           <Card key={s.label} className="p-4">
